@@ -58,12 +58,8 @@
 	});
 	mui_1.render(function () { return React.createElement("div", null,
 	    React.createElement(field_1.Field, { id: "first", label: "Provide me some value", fieldState: fieldState }),
-	    !!fieldState.value.trim() && React.createElement("p", null,
-	        "Current Field Value = ",
-	        fieldState.value),
-	    fieldState.hasError && React.createElement("p", null,
-	        "Current Field Error = ",
-	        fieldState.error)); });
+	    React.createElement("br", null),
+	    React.createElement(mui_1.Button, { onClick: function () { return fieldState.validate(); } }, "Click me to validate")); });
 
 
 /***/ },
@@ -39951,4 +39947,4 @@
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=app-1.js.map
+//# sourceMappingURL=app-2.js.map
