@@ -90,6 +90,7 @@
 	var index_1 = __webpack_require__(363);
 	var fieldState = new index_1.FieldState({
 	    value: '',
+	    autoValidationEnabled: false,
 	    validators: [function (val) { return val !== 'foo' && "I only allow 'foo'"; }]
 	});
 	mui_1.render(function () { return React.createElement("form", { onSubmit: function (e) { return __awaiter(_this, void 0, void 0, function () {
