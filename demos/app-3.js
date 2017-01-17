@@ -102,8 +102,10 @@
 	                    return [4 /*yield*/, fieldState.validate()];
 	                case 1:
 	                    res = _a.sent();
-	                    if (res.hasError)
+	                    if (res.hasError) {
+	                        fieldState.enableAutoValidationAndValidate();
 	                        return [2 /*return*/];
+	                    }
 	                    console.log('Validated Value:', fieldState.$);
 	                    return [2 /*return*/];
 	            }
