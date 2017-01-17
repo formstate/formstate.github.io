@@ -103,7 +103,7 @@
 	                case 1:
 	                    res = _a.sent();
 	                    if (res.hasError) {
-	                        fieldState.enableAutoValidationAndValidate();
+	                        fieldState.enableAutoValidation();
 	                        return [2 /*return*/];
 	                    }
 	                    console.log('Validated Value:', fieldState.$);
@@ -35894,6 +35894,9 @@
 	        var _this = this;
 	        this.config = config;
 	        this.autoValidationEnabled = true;
+	        this.enableAutoValidation = function () {
+	            _this.autoValidationEnabled = true;
+	        };
 	        this.enableAutoValidationAndValidate = function () {
 	            _this.autoValidationEnabled = true;
 	            _this.validate();
@@ -36012,6 +36015,9 @@
 	], FieldState.prototype, "autoValidationEnabled", void 0);
 	__decorate([
 	    mobx_1.action
+	], FieldState.prototype, "enableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
 	], FieldState.prototype, "enableAutoValidationAndValidate", void 0);
 	__decorate([
 	    mobx_1.action
@@ -36064,6 +36070,9 @@
 	            return keys.map(function (key) { return _this.$[key]; });
 	        };
 	        this.validating = false;
+	        this.enableAutoValidation = function () {
+	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
+	        };
 	        /**
 	         * Note:
 	         * - not use isArray as it might be an observable
@@ -36119,6 +36128,9 @@
 	], FormState.prototype, "validating", void 0);
 	__decorate([
 	    mobx_1.action
+	], FormState.prototype, "enableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
 	], FormState.prototype, "validate", null);
 	__decorate([
 	    mobx_1.computed
@@ -36134,8 +36146,12 @@
 	    function FormStateLazy(
 	        /** It is a function as fields can change over time */
 	        getFields) {
+	        var _this = this;
 	        this.getFields = getFields;
 	        this.validating = false;
+	        this.enableAutoValidation = function () {
+	            _this.getFields().forEach(function (x) { return x.enableAutoValidation(); });
+	        };
 	    }
 	    Object.defineProperty(FormStateLazy.prototype, "$", {
 	        get: function () {
@@ -36178,6 +36194,9 @@
 	__decorate([
 	    mobx_1.action
 	], FormStateLazy.prototype, "validate", null);
+	__decorate([
+	    mobx_1.action
+	], FormStateLazy.prototype, "enableAutoValidation", void 0);
 	__decorate([
 	    mobx_1.computed
 	], FormStateLazy.prototype, "hasError", null);
