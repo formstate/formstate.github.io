@@ -35899,7 +35899,7 @@
 	            _this.validating = true;
 	            var value = _this.value;
 	            return applyValidators(_this.value, _this.config.validators || [])
-	                .then(function (fieldError) {
+	                .then(mobx_1.action(function (fieldError) {
 	                if (_this.lastValidationRequest !== lastValidationRequest)
 	                    return;
 	                _this.validating = false;
@@ -35925,7 +35925,7 @@
 	                        value: value
 	                    };
 	                }
-	            });
+	            }));
 	        };
 	        this.queuedValidationWakeup = function () {
 	            if (_this.preventNextQueuedValidation) {
@@ -35942,13 +35942,15 @@
 	        this.onUpdate = function () {
 	            _this.config.onUpdate && _this.config.onUpdate(_this);
 	        };
-	        this.value = config.value;
-	        this.$ = config.value;
-	        /**
-	         * Automatic validation configuration
-	         */
-	        this.queueValidation = utils.debounce(this.queuedValidationWakeup, config.autoValidationDebounceMs || 200);
-	        this.autoValidationEnabled = config.autoValidationEnabled == undefined ? true : config.autoValidationEnabled;
+	        mobx_1.runInAction(function () {
+	            _this.value = config.value;
+	            _this.$ = config.value;
+	            /**
+	             * Automatic validation configuration
+	             */
+	            _this.queueValidation = mobx_1.action(utils.debounce(_this.queuedValidationWakeup, config.autoValidationDebounceMs || 200));
+	            _this.autoValidationEnabled = config.autoValidationEnabled == undefined ? true : config.autoValidationEnabled;
+	        });
 	    }
 	    Object.defineProperty(FieldState.prototype, "hasError", {
 	        get: function () {
@@ -36052,7 +36054,8 @@
 	        var _this = this;
 	        this.validating = true;
 	        var values = this.getValues();
-	        return Promise.all(values.map(function (value) { return value.validate(); })).then(function (res) {
+	        return Promise.all(values.map(function (value) { return value.validate(); }))
+	            .then(mobx_1.action(function (_) {
 	            _this.validating = false;
 	            var hasError = _this.hasError;
 	            if (hasError) {
@@ -36061,7 +36064,7 @@
 	            else {
 	                return { hasError: hasError, value: _this.$ };
 	            }
-	        });
+	        }));
 	    };
 	    Object.defineProperty(FormState.prototype, "hasError", {
 	        /**
@@ -36129,10 +36132,10 @@
 	    FormStateLazy.prototype.validate = function () {
 	        var _this = this;
 	        this.validating = true;
-	        return Promise.all(this.getFields().map(function (value) { return value.validate(); })).then(function (res) {
+	        return Promise.all(this.getFields().map(function (value) { return value.validate(); })).then(mobx_1.action(function (_) {
 	            _this.validating = false;
 	            return { hasError: _this.hasError };
-	        });
+	        }));
 	    };
 	    Object.defineProperty(FormStateLazy.prototype, "hasError", {
 	        get: function () {
