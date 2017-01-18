@@ -36087,6 +36087,11 @@
 	        this.enableAutoValidation = function () {
 	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
 	        };
+	        this._validators = [];
+	        this.validators = function (validators) {
+	            _this._validators = validators;
+	            return _this;
+	        };
 	        /**
 	         * Note:
 	         * - not use isArray as it might be an observable
@@ -36143,6 +36148,9 @@
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "enableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "validators", void 0);
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "validate", null);
