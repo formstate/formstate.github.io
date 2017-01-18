@@ -81,7 +81,7 @@
 	    }
 	};
 	var _this = this;
-	/** React + MUI + mobx*/
+	/** React + MUI + mobx */
 	var React = __webpack_require__(1);
 	var mui_1 = __webpack_require__(32);
 	/** Field */
