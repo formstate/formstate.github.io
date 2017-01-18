@@ -54,8 +54,7 @@
 	var index_1 = __webpack_require__(363);
 	var fieldState = new index_1.FieldState({
 	    value: '',
-	    validators: [function (val) { return !val.trim() && 'Value required'; }]
-	});
+	}).validators([function (val) { return !val.trim() && 'Value required'; }]);
 	mui_1.render(function () { return React.createElement("div", null,
 	    React.createElement(field_1.Field, { id: "first", label: "Provide me some value", fieldState: fieldState }),
 	    !!fieldState.value.trim() && React.createElement("p", null,
@@ -35868,6 +35867,11 @@
 	        this.disableAutoValidation = function () {
 	            _this.autoValidationEnabled = false;
 	        };
+	        this._validators = [];
+	        this.validators = function (validators) {
+	            _this._validators = validators;
+	            return _this;
+	        };
 	        /** Trackers for validation */
 	        this.lastValidationRequest = 0;
 	        this.preventNextQueuedValidation = false;
@@ -35904,7 +35908,7 @@
 	            var lastValidationRequest = _this.lastValidationRequest;
 	            _this.validating = true;
 	            var value = _this.value;
-	            return applyValidators(_this.value, _this.config.validators || [])
+	            return applyValidators(_this.value, _this._validators || [])
 	                .then(mobx_1.action(function (fieldError) {
 	                if (_this.lastValidationRequest !== lastValidationRequest)
 	                    return;
@@ -35988,6 +35992,9 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "disableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "validators", void 0);
 	__decorate([
 	    mobx_1.observable
 	], FieldState.prototype, "lastValidationRequest", void 0);
