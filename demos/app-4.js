@@ -91,7 +91,7 @@
 	var fieldState = new index_1.FieldState({
 	    value: '',
 	    autoValidationEnabled: false,
-	}).validators([function (val) { return val !== 'foo' && "I only allow 'foo'"; }]);
+	}).validators(function (val) { return val !== 'foo' && "I only allow 'foo'"; });
 	mui_1.render(function () { return React.createElement("form", { onSubmit: function (e) { return __awaiter(_this, void 0, void 0, function () {
 	        var res;
 	        return __generator(this, function (_a) {
@@ -35944,7 +35944,11 @@
 	            _this.autoValidationEnabled = false;
 	        };
 	        this._validators = [];
-	        this.validators = function (validators) {
+	        this.validators = function () {
+	            var validators = [];
+	            for (var _i = 0; _i < arguments.length; _i++) {
+	                validators[_i] = arguments[_i];
+	            }
 	            _this._validators = validators;
 	            return _this;
 	        };
@@ -36215,7 +36219,11 @@
 	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
 	        };
 	        this._validators = [];
-	        this.validators = function (validators) {
+	        this.validators = function () {
+	            var validators = [];
+	            for (var _i = 0; _i < arguments.length; _i++) {
+	                validators[_i] = arguments[_i];
+	            }
 	            _this._validators = validators;
 	            return _this;
 	        };

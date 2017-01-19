@@ -109,15 +109,15 @@
 	        this.cars = new index_1.FormState([]);
 	        this.addACar = function () {
 	            var car = new index_1.FormState({
-	                name: new index_1.FieldState({ value: '' }).validators([requiredWithMessage("Car needs a name")]),
-	                features: new index_1.FormState([]).validators([atLeastOneWithMessage("At least one feature should be provided")]),
+	                name: new index_1.FieldState({ value: '' }).validators(requiredWithMessage("Car needs a name")),
+	                features: new index_1.FormState([]).validators(atLeastOneWithMessage("At least one feature should be provided")),
 	            });
 	            _this.cars.$.push(car);
 	        };
 	        this.addAFeatureToACar = function (car) {
 	            var feature = new index_1.FormState({
 	                name: new index_1.FieldState({ value: '' })
-	                    .validators([requiredWithMessage("Feature needs a name")])
+	                    .validators(requiredWithMessage("Feature needs a name"))
 	            });
 	            car.$.features.$.push(feature);
 	        };
@@ -36858,7 +36858,11 @@
 	            _this.autoValidationEnabled = false;
 	        };
 	        this._validators = [];
-	        this.validators = function (validators) {
+	        this.validators = function () {
+	            var validators = [];
+	            for (var _i = 0; _i < arguments.length; _i++) {
+	                validators[_i] = arguments[_i];
+	            }
 	            _this._validators = validators;
 	            return _this;
 	        };
@@ -37129,7 +37133,11 @@
 	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
 	        };
 	        this._validators = [];
-	        this.validators = function (validators) {
+	        this.validators = function () {
+	            var validators = [];
+	            for (var _i = 0; _i < arguments.length; _i++) {
+	                validators[_i] = arguments[_i];
+	            }
 	            _this._validators = validators;
 	            return _this;
 	        };
