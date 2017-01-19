@@ -36172,6 +36172,10 @@
 	         * - not using `undefined` as length might be a subfield
 	         **/
 	        this.mode = typeof $.length === 'number' ? 'array' : 'map';
+	        /** If they didn't send in something observable make the local $ observable */
+	        if (!mobx_1.isObservable(this.$)) {
+	            this.$ = mobx_1.observable(this.$);
+	        }
 	    }
 	    /**
 	     * - Re-runs validation on all fields
