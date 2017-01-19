@@ -106,11 +106,11 @@
 	var AppState = (function () {
 	    function AppState() {
 	        var _this = this;
-	        this.cars = new index_1.FormState([]);
+	        this.cars = new index_1.FormState([]).validators(atLeastOneWithMessage("At least on car is needed"));
 	        this.addACar = function () {
 	            var car = new index_1.FormState({
 	                name: new index_1.FieldState({ value: '' }).validators(requiredWithMessage("Car needs a name")),
-	                features: new index_1.FormState([]).validators(atLeastOneWithMessage("At least one feature should be provided")),
+	                features: new index_1.FormState([]).validators(atLeastOneWithMessage("Car must have at least one feature")),
 	            });
 	            _this.cars.$.push(car);
 	        };
