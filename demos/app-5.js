@@ -4242,6 +4242,10 @@
 	exports.Button = function (props) {
 	    return React.createElement("button", __assign({}, props, { type: props.type || 'button', className: typestyle_1.classes(exports.buttonClass, props.className) }));
 	};
+	exports.ErrorText = function (_a) {
+	    var children = _a.children;
+	    return React.createElement("div", { style: { color: 'red', fontFamily: 'arial' } }, children);
+	};
 
 
 /***/ },
@@ -36226,12 +36230,7 @@
 	            return _this;
 	        };
 	        this._error = '';
-	        /**
-	         * Note:
-	         * - not use isArray as it might be an observable
-	         * - not using `undefined` as length might be a subfield
-	         **/
-	        this.mode = typeof $.length === 'number' ? 'array' : 'map';
+	        this.mode = mobx_1.isArrayLike($) ? 'array' : 'map';
 	        /** If they didn't send in something observable make the local $ observable */
 	        if (!mobx_1.isObservable(this.$)) {
 	            this.$ = mobx_1.observable(this.$);

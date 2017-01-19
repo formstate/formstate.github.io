@@ -4181,6 +4181,10 @@
 	exports.Button = function (props) {
 	    return React.createElement("button", __assign({}, props, { type: props.type || 'button', className: typestyle_1.classes(exports.buttonClass, props.className) }));
 	};
+	exports.ErrorText = function (_a) {
+	    var children = _a.children;
+	    return React.createElement("div", { style: { color: 'red', fontFamily: 'arial' } }, children);
+	};
 
 
 /***/ },
@@ -34088,7 +34092,7 @@
 	/**
 	 * Field component. Must be an observer.
 	 */
-	exports.Field = mobx_react_1.observer(function (props) { return (React.createElement(TextField_1.default, { id: props.id, floatingLabelText: props.label, value: props.fieldState.value, onChange: function () { props.fieldState.onChange(arguments[1]); }, errorText: props.fieldState.error })); });
+	exports.Field = mobx_react_1.observer(function (props) { return (React.createElement(TextField_1.default, { id: props.id, fullWidth: true, floatingLabelText: props.label, value: props.fieldState.value, onChange: function () { props.fieldState.onChange(arguments[1]); }, errorText: props.fieldState.error })); });
 
 
 /***/ },
@@ -36163,12 +36167,7 @@
 	            return _this;
 	        };
 	        this._error = '';
-	        /**
-	         * Note:
-	         * - not use isArray as it might be an observable
-	         * - not using `undefined` as length might be a subfield
-	         **/
-	        this.mode = typeof $.length === 'number' ? 'array' : 'map';
+	        this.mode = mobx_1.isArrayLike($) ? 'array' : 'map';
 	        /** If they didn't send in something observable make the local $ observable */
 	        if (!mobx_1.isObservable(this.$)) {
 	            this.$ = mobx_1.observable(this.$);
