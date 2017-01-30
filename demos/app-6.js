@@ -23572,6 +23572,7 @@
 	registerGlobals();
 	exports.extras = {
 	    allowStateChanges: allowStateChanges,
+	    deepEqual: deepEqual,
 	    getAtom: getAtom,
 	    getDebugName: getDebugName,
 	    getDependencyTree: getDependencyTree,
@@ -23760,7 +23761,7 @@
 	    opts.name = opts.name || expression.name || effect.name || ("Reaction@" + getNextId());
 	    opts.fireImmediately = arg3 === true || opts.fireImmediately === true;
 	    opts.delay = opts.delay || 0;
-	    opts.compareStructural = opts.compareStructural || false;
+	    opts.compareStructural = opts.compareStructural || opts.struct || false;
 	    effect = action(opts.name, opts.context ? effect.bind(opts.context) : effect);
 	    if (opts.context) {
 	        expression = expression.bind(opts.context);
@@ -23825,7 +23826,7 @@
 	    invariant(arguments.length < 3, "computed takes one or two arguments if used as function");
 	    var opts = typeof arg2 === "object" ? arg2 : {};
 	    opts.setter = typeof arg2 === "function" ? arg2 : opts.setter;
-	    return new ComputedValue(arg1, opts.context, opts.compareStructural || false, opts.name || arg1.name || "", opts.setter);
+	    return new ComputedValue(arg1, opts.context, opts.compareStructural || opts.struct || false, opts.name || arg1.name || "", opts.setter);
 	});
 	exports.computed = computed;
 	computed.struct = computedStructDecorator;
@@ -23981,6 +23982,123 @@
 	    return isObservableObject(value) || !!value.$mobx || isAtom(value) || isReaction(value) || isComputedValue(value);
 	}
 	exports.isObservable = isObservable;
+	var deepDecorator = createDecoratorForEnhancer(deepEnhancer);
+	var shallowDecorator = createDecoratorForEnhancer(shallowEnhancer);
+	var refDecorator = createDecoratorForEnhancer(referenceEnhancer);
+	var deepStructDecorator = createDecoratorForEnhancer(deepStructEnhancer);
+	var refStructDecorator = createDecoratorForEnhancer(refStructEnhancer);
+	function createObservable(v) {
+	    if (v === void 0) { v = undefined; }
+	    if (typeof arguments[1] === "string")
+	        return deepDecorator.apply(null, arguments);
+	    invariant(arguments.length <= 1, "observable expects zero or one arguments");
+	    invariant(!isModifierDescriptor(v), "modifiers can only be used for individual object properties");
+	    if (isObservable(v))
+	        return v;
+	    var res = deepEnhancer(v, undefined, undefined);
+	    if (res !== v)
+	        return res;
+	    return observable.box(v);
+	}
+	var IObservableFactories = (function () {
+	    function IObservableFactories() {
+	    }
+	    IObservableFactories.prototype.box = function (value, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("box");
+	        return new ObservableValue(value, deepEnhancer, name);
+	    };
+	    IObservableFactories.prototype.shallowBox = function (value, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("shallowBox");
+	        return new ObservableValue(value, referenceEnhancer, name);
+	    };
+	    IObservableFactories.prototype.array = function (initialValues, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("array");
+	        return new ObservableArray(initialValues, deepEnhancer, name);
+	    };
+	    IObservableFactories.prototype.shallowArray = function (initialValues, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("shallowArray");
+	        return new ObservableArray(initialValues, referenceEnhancer, name);
+	    };
+	    IObservableFactories.prototype.map = function (initialValues, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("map");
+	        return new ObservableMap(initialValues, deepEnhancer, name);
+	    };
+	    IObservableFactories.prototype.shallowMap = function (initialValues, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("shallowMap");
+	        return new ObservableMap(initialValues, referenceEnhancer, name);
+	    };
+	    IObservableFactories.prototype.object = function (props, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("object");
+	        var res = {};
+	        asObservableObject(res, name);
+	        extendObservable(res, props);
+	        return res;
+	    };
+	    IObservableFactories.prototype.shallowObject = function (props, name) {
+	        if (arguments.length > 2)
+	            incorrectlyUsedAsDecorator("shallowObject");
+	        var res = {};
+	        asObservableObject(res, name);
+	        extendShallowObservable(res, props);
+	        return res;
+	    };
+	    IObservableFactories.prototype.ref = function () {
+	        if (arguments.length < 2) {
+	            return createModifierDescriptor(referenceEnhancer, arguments[0]);
+	        }
+	        else {
+	            return refDecorator.apply(null, arguments);
+	        }
+	    };
+	    IObservableFactories.prototype.shallow = function () {
+	        if (arguments.length < 2) {
+	            return createModifierDescriptor(shallowEnhancer, arguments[0]);
+	        }
+	        else {
+	            return shallowDecorator.apply(null, arguments);
+	        }
+	    };
+	    IObservableFactories.prototype.deep = function () {
+	        if (arguments.length < 2) {
+	            return createModifierDescriptor(deepEnhancer, arguments[0]);
+	        }
+	        else {
+	            return deepDecorator.apply(null, arguments);
+	        }
+	    };
+	    IObservableFactories.prototype.struct = function () {
+	        if (arguments.length < 2) {
+	            return createModifierDescriptor(deepStructEnhancer, arguments[0]);
+	        }
+	        else {
+	            return deepStructDecorator.apply(null, arguments);
+	        }
+	    };
+	    return IObservableFactories;
+	}());
+	exports.IObservableFactories = IObservableFactories;
+	var observable = createObservable;
+	exports.observable = observable;
+	Object.keys(IObservableFactories.prototype).forEach(function (key) { return observable[key] = IObservableFactories.prototype[key]; });
+	observable.deep.struct = observable.struct;
+	observable.ref.struct = function () {
+	    if (arguments.length < 2) {
+	        return createModifierDescriptor(refStructEnhancer, arguments[0]);
+	    }
+	    else {
+	        return refStructDecorator.apply(null, arguments);
+	    }
+	};
+	function incorrectlyUsedAsDecorator(methodName) {
+	    fail("Expected one or two arguments to observable." + methodName + ". Did you accidentally try to use observable." + methodName + " as decorator?");
+	}
 	function createDecoratorForEnhancer(enhancer) {
 	    invariant(!!enhancer, ":(");
 	    return createClassPropertyDecorator(function (target, name, baseValue, _, baseDescriptor) {
@@ -23999,85 +24117,6 @@
 	        setPropertyValue(this, name, value);
 	    }, true, false);
 	}
-	var deepObservableDecorator = createDecoratorForEnhancer(deepEnhancer);
-	var shallowObservableDecorator = createDecoratorForEnhancer(shallowEnhancer);
-	var refObservableDecorator = createDecoratorForEnhancer(referenceEnhancer);
-	function createObservable(v) {
-	    if (v === void 0) { v = undefined; }
-	    if (typeof arguments[1] === "string")
-	        return deepObservableDecorator.apply(null, arguments);
-	    invariant(arguments.length <= 1, "observable expects zero or one arguments");
-	    invariant(!isModifierDescriptor(v), "modifiers can only be used for individual object properties");
-	    if (isObservable(v))
-	        return v;
-	    var res = deepEnhancer(v, undefined, undefined);
-	    if (res !== v)
-	        return res;
-	    return observable.box(v);
-	}
-	var IObservableFactories = (function () {
-	    function IObservableFactories() {
-	    }
-	    IObservableFactories.prototype.box = function (value, name) {
-	        return new ObservableValue(value, deepEnhancer, name);
-	    };
-	    IObservableFactories.prototype.shallowBox = function (value, name) {
-	        return new ObservableValue(value, referenceEnhancer, name);
-	    };
-	    IObservableFactories.prototype.array = function (initialValues, name) {
-	        return new ObservableArray(initialValues, deepEnhancer, name);
-	    };
-	    IObservableFactories.prototype.shallowArray = function (initialValues, name) {
-	        return new ObservableArray(initialValues, referenceEnhancer, name);
-	    };
-	    IObservableFactories.prototype.map = function (initialValues, name) {
-	        return new ObservableMap(initialValues, deepEnhancer, name);
-	    };
-	    IObservableFactories.prototype.shallowMap = function (initialValues, name) {
-	        return new ObservableMap(initialValues, referenceEnhancer, name);
-	    };
-	    IObservableFactories.prototype.object = function (props, name) {
-	        var res = {};
-	        asObservableObject(res, name);
-	        extendObservable(res, props);
-	        return res;
-	    };
-	    IObservableFactories.prototype.shallowObject = function (props, name) {
-	        var res = {};
-	        asObservableObject(res, name);
-	        extendShallowObservable(res, props);
-	        return res;
-	    };
-	    IObservableFactories.prototype.ref = function () {
-	        if (arguments.length < 2) {
-	            return createModifierDescriptor(referenceEnhancer, arguments[0]);
-	        }
-	        else {
-	            return refObservableDecorator.apply(null, arguments);
-	        }
-	    };
-	    IObservableFactories.prototype.shallow = function () {
-	        if (arguments.length < 2) {
-	            return createModifierDescriptor(shallowEnhancer, arguments[0]);
-	        }
-	        else {
-	            return shallowObservableDecorator.apply(null, arguments);
-	        }
-	    };
-	    IObservableFactories.prototype.deep = function () {
-	        if (arguments.length < 2) {
-	            return createModifierDescriptor(deepEnhancer, arguments[0]);
-	        }
-	        else {
-	            return deepObservableDecorator.apply(null, arguments);
-	        }
-	    };
-	    return IObservableFactories;
-	}());
-	exports.IObservableFactories = IObservableFactories;
-	var observable = createObservable;
-	exports.observable = observable;
-	Object.keys(IObservableFactories.prototype).forEach(function (key) { return observable[key] = IObservableFactories.prototype[key]; });
 	function observe(thing, propOrCb, cbOrFire, fireImmediately) {
 	    if (typeof cbOrFire === "function")
 	        return observeObservableProperty(thing, propOrCb, cbOrFire, fireImmediately);
@@ -24151,7 +24190,7 @@
 	        case 0:
 	            thing = globalState.trackingDerivation;
 	            if (!thing)
-	                return log("whyRun() can only be used if a derivation is active, or by passing an computed value / reaction explicitly. If you invoked whyRun from inside a computation; the computation is currently suspended but re-evaluating because somebody requested it's value.");
+	                return log("whyRun() can only be used if a derivation is active, or by passing an computed value / reaction explicitly. If you invoked whyRun from inside a computation; the computation is currently suspended but re-evaluating because somebody requested its value.");
 	            break;
 	        case 2:
 	            thing = getAtom(thing, prop);
@@ -24432,6 +24471,10 @@
 	    ComputedValue.prototype.toString = function () {
 	        return this.name + "[" + this.derivation.toString() + "]";
 	    };
+	    ComputedValue.prototype.valueOf = function () {
+	        return toPrimitive(this.get());
+	    };
+	    ;
 	    ComputedValue.prototype.whyRun = function () {
 	        var isTracking = Boolean(globalState.trackingDerivation);
 	        var observing = unique(this.isComputing ? this.newObserving : this.observing).map(function (dep) { return dep.name; });
@@ -24445,6 +24488,7 @@
 	    };
 	    return ComputedValue;
 	}());
+	ComputedValue.prototype[primitiveSymbol()] = ComputedValue.prototype.valueOf;
 	var isComputedValue = createInstanceofPredicate("ComputedValue", ComputedValue);
 	var IDerivationState;
 	(function (IDerivationState) {
@@ -25007,16 +25051,17 @@
 	    untrackedEnd(prevU);
 	}
 	function asReference(value) {
-	    deprecated("asReference is deprecated, use modifiers.ref instead");
+	    deprecated("asReference is deprecated, use observable.ref instead");
 	    return observable.ref(value);
 	}
 	exports.asReference = asReference;
 	function asStructure(value) {
-	    return fail("asStructure is deprecated. Use computed.struct or reaction options instead.");
+	    deprecated("asStructure is deprecated. Use observable.struct, computed.struct or reaction options instead.");
+	    return observable.struct(value);
 	}
 	exports.asStructure = asStructure;
 	function asFlat(value) {
-	    deprecated("asFlat is deprecated, use modifiers.shallow instead");
+	    deprecated("asFlat is deprecated, use observable.shallow instead");
 	    return observable.shallow(value);
 	}
 	exports.asFlat = asFlat;
@@ -25067,6 +25112,28 @@
 	}
 	function referenceEnhancer(newValue) {
 	    return newValue;
+	}
+	function deepStructEnhancer(v, oldValue, name) {
+	    if (deepEqual(v, oldValue))
+	        return oldValue;
+	    if (isObservable(v))
+	        return v;
+	    if (Array.isArray(v))
+	        return new ObservableArray(v, deepStructEnhancer, name);
+	    if (isES6Map(v))
+	        return new ObservableMap(v, deepStructEnhancer, name);
+	    if (isPlainObject(v)) {
+	        var res = {};
+	        asObservableObject(res, name);
+	        extendObservableHelper(res, deepStructEnhancer, [v]);
+	        return res;
+	    }
+	    return v;
+	}
+	function refStructEnhancer(v, oldValue, name) {
+	    if (deepEqual(v, oldValue))
+	        return oldValue;
+	    return v;
 	}
 	var safariPrototypeSetterInheritanceBug = (function () {
 	    var v = false;
@@ -25465,11 +25532,13 @@
 	function createArrayGetter(index) {
 	    return function () {
 	        var impl = this.$mobx;
-	        if (impl && index < impl.values.length) {
-	            impl.atom.reportObserved();
-	            return impl.values[index];
+	        if (impl) {
+	            if (index < impl.values.length) {
+	                impl.atom.reportObserved();
+	                return impl.values[index];
+	            }
+	            console.warn("[mobx.array] Attempt to read an array index (" + index + ") that is out of bounds (" + impl.values.length + "). Please check length first. Out of bound indices will not be tracked by MobX");
 	        }
-	        console.warn("[mobx.array] Attempt to read an array index (" + index + ") that is out of bounds (" + impl.values.length + "). Please check length first. Out of bound indices will not be tracked by MobX");
 	        return undefined;
 	    };
 	}
@@ -25991,8 +26060,12 @@
 	    ObservableValue.prototype.toString = function () {
 	        return this.name + "[" + this.value + "]";
 	    };
+	    ObservableValue.prototype.valueOf = function () {
+	        return toPrimitive(this.get());
+	    };
 	    return ObservableValue;
 	}(BaseAtom));
+	ObservableValue.prototype[primitiveSymbol()] = ObservableValue.prototype.valueOf;
 	var isObservableValue = createInstanceofPredicate("ObservableValue", ObservableValue);
 	function getAtom(thing, property) {
 	    if (typeof thing === "object" && thing !== null) {
@@ -26219,7 +26292,7 @@
 	}
 	function valueDidChange(compareStructural, oldValue, newValue) {
 	    return compareStructural
-	        ? !deepEquals(oldValue, newValue)
+	        ? !deepEqual(oldValue, newValue)
 	        : oldValue !== newValue;
 	}
 	var prototypeHasOwnProperty = Object.prototype.hasOwnProperty;
@@ -26260,37 +26333,57 @@
 	        res.push(key);
 	    return res;
 	}
-	function deepEquals(a, b) {
+	function deepEqual(a, b) {
 	    if (a === null && b === null)
 	        return true;
 	    if (a === undefined && b === undefined)
 	        return true;
+	    if (typeof a !== "object")
+	        return a === b;
 	    var aIsArray = isArrayLike(a);
+	    var aIsMap = isMapLike(a);
 	    if (aIsArray !== isArrayLike(b)) {
+	        return false;
+	    }
+	    else if (aIsMap !== isMapLike(b)) {
 	        return false;
 	    }
 	    else if (aIsArray) {
 	        if (a.length !== b.length)
 	            return false;
 	        for (var i = a.length - 1; i >= 0; i--)
-	            if (!deepEquals(a[i], b[i]))
+	            if (!deepEqual(a[i], b[i]))
 	                return false;
 	        return true;
+	    }
+	    else if (aIsMap) {
+	        if (a.size !== b.size)
+	            return false;
+	        var equals_1 = true;
+	        a.forEach(function (value, key) {
+	            equals_1 = equals_1 && deepEqual(b.get(key), value);
+	        });
+	        return equals_1;
 	    }
 	    else if (typeof a === "object" && typeof b === "object") {
 	        if (a === null || b === null)
 	            return false;
+	        if (isMapLike(a) && isMapLike(b)) {
+	            if (a.size !== b.size)
+	                return false;
+	            return deepEqual(observable.shallowMap(a).entries(), observable.shallowMap(b).entries());
+	        }
 	        if (getEnumerableKeys(a).length !== getEnumerableKeys(b).length)
 	            return false;
 	        for (var prop in a) {
 	            if (!(prop in b))
 	                return false;
-	            if (!deepEquals(a[prop], b[prop]))
+	            if (!deepEqual(a[prop], b[prop]))
 	                return false;
 	        }
 	        return true;
 	    }
-	    return a === b;
+	    return false;
 	}
 	function createInstanceofPredicate(name, clazz) {
 	    var propName = "isMobX" + name;
@@ -26303,10 +26396,19 @@
 	    return Array.isArray(x) || isObservableArray(x);
 	}
 	exports.isArrayLike = isArrayLike;
+	function isMapLike(x) {
+	    return isES6Map(x) || isObservableMap(x);
+	}
 	function isES6Map(thing) {
-	    if (thing instanceof getGlobal().Map)
+	    if (getGlobal().Map !== undefined && thing instanceof getGlobal().Map)
 	        return true;
 	    return false;
+	}
+	function primitiveSymbol() {
+	    return (typeof Symbol === "function" && Symbol.toPrimitive) || "@@toPrimitive";
+	}
+	function toPrimitive(value) {
+	    return value === null ? null : typeof value === "object" ? ("" + value) : value;
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
