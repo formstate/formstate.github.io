@@ -36053,7 +36053,12 @@
 	                var hasError = _this.hasError;
 	                /** If no error, copy over the value to validated value */
 	                if (!hasError) {
-	                    _this.$ = value;
+	                    var prev = _this.$;
+	                    var next = value;
+	                    if (prev !== next) {
+	                        _this.$ = value;
+	                        _this.on$ChangeAfterValidation({ prev: prev, next: next });
+	                    }
 	                }
 	                /** before returning update */
 	                _this.onUpdate();
@@ -36083,6 +36088,9 @@
 	        this.queueValidation = mobx_1.action(utils_1.debounce(this.queuedValidationWakeup, 200));
 	        this.onUpdate = function () {
 	            _this.config.onUpdate && _this.config.onUpdate(_this);
+	        };
+	        this.on$ChangeAfterValidation = function (evt) {
+	            _this.config.on$ChangeAfterValidation && _this.config.on$ChangeAfterValidation(evt);
 	        };
 	        mobx_1.runInAction(function () {
 	            _this.value = config.value;
@@ -36151,6 +36159,9 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "onUpdate", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "on$ChangeAfterValidation", void 0);
 	exports.FieldState = FieldState;
 
 
@@ -36333,14 +36344,40 @@
 	    };
 	    Object.defineProperty(FormState.prototype, "hasError", {
 	        /**
-	         * Does any field have an error
+	         * Does any field or form have an error
 	         */
 	        get: function () {
-	            return this.getValues().some(function (f) { return f.hasError; }) || !!this._error;
+	            return this.hasFieldError || this.hasFormError;
 	        },
 	        enumerable: true,
 	        configurable: true
 	    });
+	    Object.defineProperty(FormState.prototype, "hasFieldError", {
+	        /**
+	         * Does any field have an error
+	         */
+	        get: function () {
+	            return this.getValues().some(function (f) { return f.hasError; });
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(FormState.prototype, "hasFormError", {
+	        /**
+	         * Does form level validation have an error
+	         */
+	        get: function () {
+	            return !!this._error;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * Call it when you are `reinit`ing child fields
+	     */
+	    FormState.prototype.clearFormError = function () {
+	        this._error = '';
+	    };
 	    Object.defineProperty(FormState.prototype, "error", {
 	        /**
 	         * The first error from any sub if any
@@ -36372,6 +36409,15 @@
 	__decorate([
 	    mobx_1.computed
 	], FormState.prototype, "hasError", null);
+	__decorate([
+	    mobx_1.computed
+	], FormState.prototype, "hasFieldError", null);
+	__decorate([
+	    mobx_1.computed
+	], FormState.prototype, "hasFormError", null);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "clearFormError", null);
 	__decorate([
 	    mobx_1.computed
 	], FormState.prototype, "error", null);

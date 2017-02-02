@@ -45,12 +45,6 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-	    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-	    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-	    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-	    return c > 3 && r && Object.defineProperty(target, key, r), r;
-	};
 	var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -90,50 +84,23 @@
 	/** React + MUI + mobx */
 	var React = __webpack_require__(1);
 	var mui_1 = __webpack_require__(32);
-	var mobx_1 = __webpack_require__(186);
 	var gls_1 = __webpack_require__(342);
 	/** Field */
 	var field_1 = __webpack_require__(352);
 	/** FieldState */
 	var index_1 = __webpack_require__(373);
-	/** Our validations */
-	var requiredWithMessage = function (message) {
-	    return function (val) { return !val.trim() && message; };
-	};
-	var atLeastOneWithMessage = function (message) {
-	    return function (val) { return !val.length && message; };
-	};
-	var AppState = (function () {
-	    function AppState() {
-	        var _this = this;
-	        this.cars = new index_1.FormState([]).validators(atLeastOneWithMessage("At least on car is needed"));
-	        this.addACar = function () {
-	            var car = new index_1.FormState({
-	                name: new index_1.FieldState({ value: '' }).validators(requiredWithMessage("Car needs a name")),
-	                features: new index_1.FormState([]).validators(atLeastOneWithMessage("Car must have at least one feature")),
-	            });
-	            _this.cars.$.push(car);
-	        };
-	        this.addAFeatureToACar = function (car) {
-	            var feature = new index_1.FormState({
-	                name: new index_1.FieldState({ value: '' })
-	                    .validators(requiredWithMessage("Feature needs a name"))
-	            });
-	            car.$.features.$.push(feature);
-	        };
-	    }
-	    return AppState;
-	}());
-	__decorate([
-	    mobx_1.observable
-	], AppState.prototype, "cars", void 0);
-	__decorate([
-	    mobx_1.action
-	], AppState.prototype, "addACar", void 0);
-	__decorate([
-	    mobx_1.action
-	], AppState.prototype, "addAFeatureToACar", void 0);
-	var state = new AppState();
+	var nameRequired = function (val) { return !val && 'Name required'; };
+	var revalidateForm = function () { return form.hasFormError && form.validate(); };
+	var form = new index_1.FormState({
+	    name1: new index_1.FieldState({
+	        value: '',
+	        on$ChangeAfterValidation: revalidateForm,
+	    }).validators(nameRequired),
+	    name2: new index_1.FieldState({
+	        value: '',
+	        on$ChangeAfterValidation: revalidateForm,
+	    }).validators(nameRequired),
+	}).validators(function ($) { return $.name1.$ !== $.name2.$ && 'Names must match'; });
 	mui_1.render(function () {
 	    return (React.createElement("form", { onSubmit: function (e) { return __awaiter(_this, void 0, void 0, function () {
 	            var res;
@@ -141,7 +108,7 @@
 	                switch (_a.label) {
 	                    case 0:
 	                        e.preventDefault();
-	                        return [4 /*yield*/, state.cars.validate()];
+	                        return [4 /*yield*/, form.validate()];
 	                    case 1:
 	                        res = _a.sent();
 	                        if (res.hasError) {
@@ -153,30 +120,14 @@
 	            });
 	        }); } },
 	        React.createElement(gls_1.Vertical, null,
-	            React.createElement(mui_1.Button, { onClick: state.addACar },
-	                "Add ",
-	                state.cars.$.length ? 'another' : 'a',
-	                " car"),
-	            state.cars.$.map(function (car, carKey) {
-	                return (React.createElement(gls_1.Vertical, { key: carKey, style: { marginLeft: '10px' } },
-	                    React.createElement(field_1.Field, { id: "carName" + carKey, label: "Car Name", fieldState: car.$.name }),
-	                    !!car.$.features.$.length
-	                        && React.createElement(gls_1.Vertical, { style: { padding: '10px', border: '1px dotted #333' } }, car.$.features.$.map(function (feature, featureKey) {
-	                            return (React.createElement(field_1.Field, { key: featureKey, id: carKey + "featureName" + featureKey, label: "Feature Name", fieldState: feature.$.name }));
-	                        })),
-	                    car.hasError && React.createElement(mui_1.ErrorText, null,
-	                        "Car has error: ",
-	                        car.error),
-	                    React.createElement(mui_1.Button, { onClick: function () { return state.addAFeatureToACar(car); } },
-	                        "Add ",
-	                        car.$.features.$.length ? 'another' : 'a',
-	                        " feature")));
-	            }),
+	            React.createElement(field_1.Field, { id: "name1", label: "Name", fieldState: form.$.name1 }),
+	            React.createElement(field_1.Field, { id: "name2", label: "Re-enter name", fieldState: form.$.name2 }),
+	            form.hasFormError && React.createElement(mui_1.ErrorText, null, form.error),
 	            React.createElement(gls_1.Horizontal, { verticalAlign: "center" },
 	                React.createElement(mui_1.Button, { type: "submit" }, "Submit"),
-	                state.cars.hasError && React.createElement(mui_1.ErrorText, null,
+	                form.hasError && React.createElement(mui_1.ErrorText, null,
 	                    "Form has error: ",
-	                    state.cars.error)))));
+	                    form.error)))));
 	});
 
 
@@ -37469,4 +37420,4 @@
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=app-6.js.map
+//# sourceMappingURL=app-7.js.map
