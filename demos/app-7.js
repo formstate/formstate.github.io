@@ -34546,7 +34546,7 @@
 	exports.Vertical = function (props) {
 	    var margin = props.margin, children = props.children, maxWidth = props.maxWidth, horizontalAlign = props.horizontalAlign, otherProps = __rest(props, ["margin", "children", "maxWidth", "horizontalAlign"]);
 	    var spacing = (margin == null ? exports.defaultValues.verticalSpacing : margin);
-	    var className = typestyle.classes(props.className, typestyle.style(csstips.verticallySpaced(spacing)), maxWidth && typestyle.style({ maxWidth: maxWidth + 'px' }), horizontalAlign == 'center' && typestyle.style(csstips.center));
+	    var className = typestyle.classes(props.className, typestyle.style(csstips.verticallySpaced(spacing)), maxWidth != null && typestyle.style({ maxWidth: maxWidth + 'px' }), horizontalAlign == 'center' && typestyle.style(csstips.center));
 	    return (React.createElement(exports.ContentVertical, __assign({}, otherProps, { className: className, "data-comment": "Vertical" }), React.Children.toArray(children).filter(function (c) { return !!c; }).map(function (child, i) { return React.createElement(exports.Content, { key: child.key || i }, child); })));
 	};
 	exports.Vertical.displayName = "Vertical";
@@ -37446,7 +37446,7 @@
 	    Object.defineProperty(FormStateLazy.prototype, "error", {
 	        get: function () {
 	            var subItemWithError = this.getFields().find(function (f) { return !!f.hasError; });
-	            return subItemWithError.error;
+	            return subItemWithError == undefined ? undefined : subItemWithError.error;
 	        },
 	        enumerable: true,
 	        configurable: true

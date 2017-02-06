@@ -36591,7 +36591,7 @@
 	    Object.defineProperty(FormStateLazy.prototype, "error", {
 	        get: function () {
 	            var subItemWithError = this.getFields().find(function (f) { return !!f.hasError; });
-	            return subItemWithError.error;
+	            return subItemWithError == undefined ? undefined : subItemWithError.error;
 	        },
 	        enumerable: true,
 	        configurable: true
