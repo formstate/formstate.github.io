@@ -36428,13 +36428,33 @@
 	    FormState.prototype.clearFormError = function () {
 	        this._error = '';
 	    };
-	    Object.defineProperty(FormState.prototype, "error", {
+	    Object.defineProperty(FormState.prototype, "fieldError", {
 	        /**
-	         * The first error from any sub if any
+	         * Error from some sub field if any
 	         */
 	        get: function () {
 	            var subItemWithError = this.getValues().find(function (f) { return !!f.hasError; });
-	            return subItemWithError ? subItemWithError.error : this._error;
+	            return subItemWithError ? subItemWithError.error : null;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(FormState.prototype, "formError", {
+	        /**
+	         * Error from form if any
+	         */
+	        get: function () {
+	            return this._error;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(FormState.prototype, "error", {
+	        /**
+	         * The first error from any sub (if any) or form error
+	         */
+	        get: function () {
+	            return this.fieldError || this.formError;
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -36468,6 +36488,12 @@
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "clearFormError", null);
+	__decorate([
+	    mobx_1.computed
+	], FormState.prototype, "fieldError", null);
+	__decorate([
+	    mobx_1.computed
+	], FormState.prototype, "formError", null);
 	__decorate([
 	    mobx_1.computed
 	], FormState.prototype, "error", null);
