@@ -107,7 +107,7 @@
 	                switch (_a.label) {
 	                    case 0:
 	                        e.preventDefault();
-	                        return [4 /*yield*/, form.enableAutoValidationAndValidate()];
+	                        return [4 /*yield*/, form.validate()];
 	                    case 1:
 	                        res = _a.sent();
 	                        if (res.hasError) {
@@ -36981,6 +36981,7 @@
 	            _this.value = value;
 	            _this.error = undefined;
 	            _this.$ = value;
+	            _this.on$Reinit();
 	            _this.onUpdate();
 	        };
 	        this.validating = false;
@@ -37056,8 +37057,10 @@
 	         * Composible fields (fields that work in conjuction with FormState)
 	         */
 	        this.on$ChangeAfterValidation = function () { };
+	        this.on$Reinit = function () { };
 	        this.setCompositionParent = function (config) {
-	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
+	            _this.on$ChangeAfterValidation = config.on$ChangeAfterValidation;
+	            _this.on$Reinit = config.on$Reinit;
 	        };
 	        mobx_1.runInAction(function () {
 	            _this.value = config.value;
@@ -37129,6 +37132,9 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "on$ChangeAfterValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "on$Reinit", void 0);
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "setCompositionParent", void 0);
@@ -37278,8 +37284,10 @@
 	         */
 	        this.validatedSubFields = [];
 	        this.on$ChangeAfterValidation = function () { };
+	        this.on$Reinit = function () { };
 	        this.setCompositionParent = function (config) {
-	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
+	            _this.on$ChangeAfterValidation = config.on$ChangeAfterValidation;
+	            _this.on$Reinit = config.on$Reinit;
 	        };
 	        this.mode = mobx_1.isArrayLike($) ? 'array' : 'map';
 	        /** If they didn't send in something observable make the local $ observable */
@@ -37417,6 +37425,9 @@
 	        var _this = this;
 	        var values = this.getValues();
 	        values.forEach(function (value) { return value.setCompositionParent({
+	            on$Reinit: mobx_1.action(function () {
+	                _this.validatedSubFields = _this.validatedSubFields.filter(function (v) { return v !== value; });
+	            }),
 	            on$ChangeAfterValidation: mobx_1.action(function () {
 	                /** Always clear the form error as its no longer relevant */
 	                if (_this.hasFormError) {
@@ -37497,6 +37508,9 @@
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "on$ChangeAfterValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "on$Reinit", void 0);
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "setCompositionParent", void 0);
