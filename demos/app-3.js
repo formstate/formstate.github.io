@@ -36364,6 +36364,10 @@
 	        this.disableAutoValidation = function () {
 	            _this.autoValidationEnabled = false;
 	        };
+	        /**
+	         * Composible field validation tracking
+	         */
+	        this.validatedSubFields = [];
 	        this.on$ChangeAfterValidation = function () { };
 	        this.setCompositionParent = function (config) {
 	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
@@ -36509,8 +36513,16 @@
 	                if (_this.hasFormError) {
 	                    _this.clearFormError();
 	                }
-	                /** If auto validation enabled and no field has error then re-validate the form */
-	                if (_this.autoValidationEnabled && !_this.hasFieldError) {
+	                /** Add the field to the validated sub fields */
+	                if (_this.validatedSubFields.indexOf(value) === -1) {
+	                    _this.validatedSubFields.push(value);
+	                }
+	                /**
+	                 * If no field has error
+	                 * and all subfields are validated
+	                 *  then re-validate the form */
+	                if (!_this.hasFieldError
+	                    && !_this.getValues().some(function (value) { return _this.validatedSubFields.indexOf(value) === -1; })) {
 	                    _this.validate();
 	                }
 	            })
@@ -36567,6 +36579,9 @@
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "disableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.observable
+	], FormState.prototype, "validatedSubFields", void 0);
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "compose", null);
