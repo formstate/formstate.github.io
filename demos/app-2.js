@@ -4987,6 +4987,9 @@
 	    var result = {};
 	    for (var _a = 0, objects_1 = objects; _a < objects_1.length; _a++) {
 	        var object = objects_1[_a];
+	        if (object == null || object === false) {
+	            continue;
+	        }
 	        for (var key in object) {
 	            /** Falsy values except a explicit 0 is ignored */
 	            var val = object[key];
@@ -36027,7 +36030,7 @@
 	        };
 	        this.enableAutoValidationAndValidate = function () {
 	            _this.autoValidationEnabled = true;
-	            _this.validate();
+	            return _this.validate();
 	        };
 	        this.disableAutoValidation = function () {
 	            _this.autoValidationEnabled = false;
@@ -36103,11 +36106,9 @@
 	                var hasError = _this.hasError;
 	                /** If no error, copy over the value to validated value */
 	                if (!hasError) {
-	                    var prev = _this.$;
-	                    var next = value;
-	                    if (prev !== next) {
+	                    if (_this.$ !== value) {
 	                        _this.$ = value;
-	                        _this.on$ChangeAfterValidation({ prev: prev, next: next });
+	                        _this.on$ChangeAfterValidation();
 	                    }
 	                }
 	                /** before returning update */
@@ -36139,8 +36140,12 @@
 	        this.onUpdate = function () {
 	            _this.config.onUpdate && _this.config.onUpdate(_this);
 	        };
-	        this.on$ChangeAfterValidation = function (evt) {
-	            _this.config.on$ChangeAfterValidation && _this.config.on$ChangeAfterValidation(evt);
+	        /**
+	         * Composible fields (fields that work in conjuction with FormState)
+	         */
+	        this.on$ChangeAfterValidation = function () { };
+	        this.setCompositionParent = function (config) {
+	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
 	        };
 	        mobx_1.runInAction(function () {
 	            _this.value = config.value;
@@ -36212,6 +36217,9 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "on$ChangeAfterValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "setCompositionParent", void 0);
 	exports.FieldState = FieldState;
 
 
@@ -36276,7 +36284,7 @@
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
 	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
 	        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments)).next());
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
 	    });
 	};
 	var __generator = (this && this.__generator) || function (thisArg, body) {
@@ -36328,9 +36336,6 @@
 	            return keys.map(function (key) { return _this.$[key]; });
 	        };
 	        this.validating = false;
-	        this.enableAutoValidation = function () {
-	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
-	        };
 	        this._validators = [];
 	        this.validators = function () {
 	            var validators = [];
@@ -36341,6 +36346,25 @@
 	            return _this;
 	        };
 	        this._error = '';
+	        /**
+	         * Auto validation
+	         */
+	        this.autoValidationEnabled = false;
+	        this.enableAutoValidation = function () {
+	            _this.autoValidationEnabled = true;
+	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
+	        };
+	        this.enableAutoValidationAndValidate = function () {
+	            _this.autoValidationEnabled = true;
+	            return _this.validate();
+	        };
+	        this.disableAutoValidation = function () {
+	            _this.autoValidationEnabled = false;
+	        };
+	        this.on$ChangeAfterValidation = function () { };
+	        this.setCompositionParent = function (config) {
+	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
+	        };
 	        this.mode = mobx_1.isArrayLike($) ? 'array' : 'map';
 	        /** If they didn't send in something observable make the local $ observable */
 	        if (!mobx_1.isObservable(this.$)) {
@@ -36385,6 +36409,7 @@
 	                            if (hasError) {
 	                                return { hasError: true };
 	                            }
+	                            _this.on$ChangeAfterValidation();
 	                            return { hasError: false, value: _this.$ };
 	                        });
 	                        return [2 /*return*/, res];
@@ -36459,14 +36484,41 @@
 	        enumerable: true,
 	        configurable: true
 	    });
+	    Object.defineProperty(FormState.prototype, "showFormError", {
+	        /**
+	         * You should only show the form error if there are no field errors
+	         */
+	        get: function () {
+	            return !this.hasFieldError && this.hasFormError;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * Composible fields (fields that work in conjuction with FormState)
+	     */
+	    FormState.prototype.compose = function () {
+	        var _this = this;
+	        var values = this.getValues();
+	        values.forEach(function (value) { return value.setCompositionParent({
+	            on$ChangeAfterValidation: mobx_1.action(function () {
+	                /** Always clear the form error as its no longer relevant */
+	                if (_this.hasFormError) {
+	                    _this.clearFormError();
+	                }
+	                /** If auto validation enabled and no field has error then re-validate the form */
+	                if (_this.autoValidationEnabled && !_this.hasFieldError) {
+	                    _this.validate();
+	                }
+	            })
+	        }); });
+	        return this;
+	    };
 	    return FormState;
 	}());
 	__decorate([
 	    mobx_1.observable
 	], FormState.prototype, "validating", void 0);
-	__decorate([
-	    mobx_1.action
-	], FormState.prototype, "enableAutoValidation", void 0);
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "validators", void 0);
@@ -36497,6 +36549,30 @@
 	__decorate([
 	    mobx_1.computed
 	], FormState.prototype, "error", null);
+	__decorate([
+	    mobx_1.computed
+	], FormState.prototype, "showFormError", null);
+	__decorate([
+	    mobx_1.observable
+	], FormState.prototype, "autoValidationEnabled", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "enableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "enableAutoValidationAndValidate", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "disableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "compose", null);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "on$ChangeAfterValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "setCompositionParent", void 0);
 	exports.FormState = FormState;
 
 

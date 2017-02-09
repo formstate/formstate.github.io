@@ -56,7 +56,7 @@
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
 	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
 	        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments)).next());
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
 	    });
 	};
 	var __generator = (this && this.__generator) || function (thisArg, body) {
@@ -5108,6 +5108,9 @@
 	    var result = {};
 	    for (var _a = 0, objects_1 = objects; _a < objects_1.length; _a++) {
 	        var object = objects_1[_a];
+	        if (object == null || object === false) {
+	            continue;
+	        }
 	        for (var key in object) {
 	            /** Falsy values except a explicit 0 is ignored */
 	            var val = object[key];
@@ -34557,22 +34560,6 @@
 	};
 	exports.FlexHorizontalMargined.displayName = "FlexVerticalMargined";
 	/**
-	 * Lays out the children vertically with
-	 * - Parent: gets to chose the overall Width
-	 * - ThisComponent: gets the Height : (by sum) of the children
-	 * - Children: get the Width : sized by content
-	 * - Children: get the Height : sized by content
-	 * - ThisComponent: Puts a margin between each item.
-	 * - ThisComponent: Puts a negative margin on itself to offset the margins of the children (prevents them from leaking out)
-	 */
-	exports.GridMargined = function (props) {
-	    var margin = props.margin, children = props.children, otherProps = __rest(props, ["margin", "children"]);
-	    var spacing = (margin == null ? exports.defaultValues.verticalSpacing : margin) + 'px';
-	    var className = typestyle.style(csstips.wrap, { marginTop: '-' + spacing, marginLeft: '-' + spacing }, props.style || {});
-	    return (React.createElement(exports.ContentHorizontal, __assign({}, otherProps, { className: className }), React.Children.toArray(children).filter(function (c) { return !!c; }).map(function (child, i) { return React.createElement(exports.Content, { key: child.key || i, style: { marginLeft: spacing, marginTop: spacing } }, child); })));
-	};
-	exports.GridMargined.displayName = "GridMargined";
-	/**
 	 * Just a display:block with vertical spacing between each child
 	 */
 	exports.VerticalMargined = function (props) {
@@ -35108,6 +35095,13 @@
 	    '-webkit-overflow-scrolling': 'touch',
 	    overflowY: 'auto'
 	};
+	/**
+	 * If you expect a child somewhere down in the tree to scroll
+	 * you need to tell the browser to prevent a scroll bar here
+	 */
+	exports.someChildWillScroll = {
+	    overflow: 'hidden'
+	};
 
 
 /***/ },
@@ -35144,6 +35138,7 @@
 	     * - https://cdnjs.com/libraries/normalize
 	     * - then latest. Currently https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css
 	     * - then copy paste raw below
+	     * - remove the sourmap at the end of the file
 	     * - fix the test (checks length of raw)
 	     * - update the link in this comment
 	     *
@@ -35151,7 +35146,7 @@
 	     * - If its a major version change in nomalize. Release as a major change in typestyle.
 	     * - otherwise minor
 	     **/
-	    typestyle_1.cssRaw("\n    button,hr,input{overflow:visible}audio,canvas,progress,video{display:inline-block}progress,sub,sup{vertical-align:baseline}html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0} menu,article,aside,details,footer,header,nav,section{display:block}h1{font-size:2em;margin:.67em 0}figcaption,figure,main{display:block}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent;-webkit-text-decoration-skip:objects}a:active,a:hover{outline-width:0}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}dfn{font-style:italic}mark{background-color:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}audio:not([controls]){display:none;height:0}img{border-style:none}svg:not(:root){overflow:hidden}button,input,optgroup,select,textarea{font-family:sans-serif;font-size:100%;line-height:1.15;margin:0}button,input{}button,select{text-transform:none}[type=submit], [type=reset],button,html [type=button]{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{box-sizing:border-box;color:inherit;display:table;max-width:100%;padding:0;white-space:normal}progress{}textarea{overflow:auto}[type=checkbox],[type=radio]{box-sizing:border-box;padding:0}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-cancel-button,[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}[hidden],template{display:none}/*# sourceMappingURL=normalize.min.css.map */\n    ".trim().replace('/*# sourceMappingURL=normalize.min.css.map */', ''));
+	    typestyle_1.cssRaw("\n    button,hr,input{overflow:visible}audio,canvas,progress,video{display:inline-block}progress,sub,sup{vertical-align:baseline}html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0} menu,article,aside,details,footer,header,nav,section{display:block}h1{font-size:2em;margin:.67em 0}figcaption,figure,main{display:block}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}a{background-color:transparent;-webkit-text-decoration-skip:objects}a:active,a:hover{outline-width:0}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:bolder}dfn{font-style:italic}mark{background-color:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}audio:not([controls]){display:none;height:0}img{border-style:none}svg:not(:root){overflow:hidden}button,input,optgroup,select,textarea{font-family:sans-serif;font-size:100%;line-height:1.15;margin:0}button,input{}button,select{text-transform:none}[type=submit], [type=reset],button,html [type=button]{-webkit-appearance:button}[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner,button::-moz-focus-inner{border-style:none;padding:0}[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring,button:-moz-focusring{outline:ButtonText dotted 1px}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{box-sizing:border-box;color:inherit;display:table;max-width:100%;padding:0;white-space:normal}progress{}textarea{overflow:auto}[type=checkbox],[type=radio]{box-sizing:border-box;padding:0}[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}[type=search]::-webkit-search-cancel-button,[type=search]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}[hidden],template{display:none}\n    ".trim());
 	}
 	exports.normalize = normalize;
 
@@ -36997,7 +36992,7 @@
 	        };
 	        this.enableAutoValidationAndValidate = function () {
 	            _this.autoValidationEnabled = true;
-	            _this.validate();
+	            return _this.validate();
 	        };
 	        this.disableAutoValidation = function () {
 	            _this.autoValidationEnabled = false;
@@ -37073,11 +37068,9 @@
 	                var hasError = _this.hasError;
 	                /** If no error, copy over the value to validated value */
 	                if (!hasError) {
-	                    var prev = _this.$;
-	                    var next = value;
-	                    if (prev !== next) {
+	                    if (_this.$ !== value) {
 	                        _this.$ = value;
-	                        _this.on$ChangeAfterValidation({ prev: prev, next: next });
+	                        _this.on$ChangeAfterValidation();
 	                    }
 	                }
 	                /** before returning update */
@@ -37109,8 +37102,12 @@
 	        this.onUpdate = function () {
 	            _this.config.onUpdate && _this.config.onUpdate(_this);
 	        };
-	        this.on$ChangeAfterValidation = function (evt) {
-	            _this.config.on$ChangeAfterValidation && _this.config.on$ChangeAfterValidation(evt);
+	        /**
+	         * Composible fields (fields that work in conjuction with FormState)
+	         */
+	        this.on$ChangeAfterValidation = function () { };
+	        this.setCompositionParent = function (config) {
+	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
 	        };
 	        mobx_1.runInAction(function () {
 	            _this.value = config.value;
@@ -37182,6 +37179,9 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "on$ChangeAfterValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "setCompositionParent", void 0);
 	exports.FieldState = FieldState;
 
 
@@ -37246,7 +37246,7 @@
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
 	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
 	        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments)).next());
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
 	    });
 	};
 	var __generator = (this && this.__generator) || function (thisArg, body) {
@@ -37298,9 +37298,6 @@
 	            return keys.map(function (key) { return _this.$[key]; });
 	        };
 	        this.validating = false;
-	        this.enableAutoValidation = function () {
-	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
-	        };
 	        this._validators = [];
 	        this.validators = function () {
 	            var validators = [];
@@ -37311,6 +37308,25 @@
 	            return _this;
 	        };
 	        this._error = '';
+	        /**
+	         * Auto validation
+	         */
+	        this.autoValidationEnabled = false;
+	        this.enableAutoValidation = function () {
+	            _this.autoValidationEnabled = true;
+	            _this.getValues().forEach(function (x) { return x.enableAutoValidation(); });
+	        };
+	        this.enableAutoValidationAndValidate = function () {
+	            _this.autoValidationEnabled = true;
+	            return _this.validate();
+	        };
+	        this.disableAutoValidation = function () {
+	            _this.autoValidationEnabled = false;
+	        };
+	        this.on$ChangeAfterValidation = function () { };
+	        this.setCompositionParent = function (config) {
+	            _this.on$ChangeAfterValidation = mobx_1.action(config.on$ChangeAfterValidation);
+	        };
 	        this.mode = mobx_1.isArrayLike($) ? 'array' : 'map';
 	        /** If they didn't send in something observable make the local $ observable */
 	        if (!mobx_1.isObservable(this.$)) {
@@ -37355,6 +37371,7 @@
 	                            if (hasError) {
 	                                return { hasError: true };
 	                            }
+	                            _this.on$ChangeAfterValidation();
 	                            return { hasError: false, value: _this.$ };
 	                        });
 	                        return [2 /*return*/, res];
@@ -37429,14 +37446,41 @@
 	        enumerable: true,
 	        configurable: true
 	    });
+	    Object.defineProperty(FormState.prototype, "showFormError", {
+	        /**
+	         * You should only show the form error if there are no field errors
+	         */
+	        get: function () {
+	            return !this.hasFieldError && this.hasFormError;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * Composible fields (fields that work in conjuction with FormState)
+	     */
+	    FormState.prototype.compose = function () {
+	        var _this = this;
+	        var values = this.getValues();
+	        values.forEach(function (value) { return value.setCompositionParent({
+	            on$ChangeAfterValidation: mobx_1.action(function () {
+	                /** Always clear the form error as its no longer relevant */
+	                if (_this.hasFormError) {
+	                    _this.clearFormError();
+	                }
+	                /** If auto validation enabled and no field has error then re-validate the form */
+	                if (_this.autoValidationEnabled && !_this.hasFieldError) {
+	                    _this.validate();
+	                }
+	            })
+	        }); });
+	        return this;
+	    };
 	    return FormState;
 	}());
 	__decorate([
 	    mobx_1.observable
 	], FormState.prototype, "validating", void 0);
-	__decorate([
-	    mobx_1.action
-	], FormState.prototype, "enableAutoValidation", void 0);
 	__decorate([
 	    mobx_1.action
 	], FormState.prototype, "validators", void 0);
@@ -37467,6 +37511,30 @@
 	__decorate([
 	    mobx_1.computed
 	], FormState.prototype, "error", null);
+	__decorate([
+	    mobx_1.computed
+	], FormState.prototype, "showFormError", null);
+	__decorate([
+	    mobx_1.observable
+	], FormState.prototype, "autoValidationEnabled", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "enableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "enableAutoValidationAndValidate", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "disableAutoValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "compose", null);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "on$ChangeAfterValidation", void 0);
+	__decorate([
+	    mobx_1.action
+	], FormState.prototype, "setCompositionParent", void 0);
 	exports.FormState = FormState;
 
 
