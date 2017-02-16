@@ -36111,6 +36111,7 @@
 	            return _this;
 	        };
 	        /** Trackers for validation */
+	        this.hasBeenValidated = false;
 	        this.lastValidationRequest = 0;
 	        this.preventNextQueuedValidation = false;
 	        /** On change on the component side */
@@ -36134,6 +36135,7 @@
 	            // This value vetos all previous values
 	            _this.value = value;
 	            _this.error = undefined;
+	            _this.hasBeenValidated = false;
 	            _this.$ = value;
 	            _this.on$Reinit();
 	            _this.onUpdate();
@@ -36190,6 +36192,10 @@
 	                        value: value
 	                    };
 	                }
+	            }))
+	                .then(mobx_1.action(function (status) {
+	                _this.hasBeenValidated = true;
+	                return status;
 	            }));
 	        };
 	        this.queuedValidationWakeup = function () {
@@ -36259,6 +36265,9 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "validators", void 0);
+	__decorate([
+	    mobx_1.observable
+	], FieldState.prototype, "hasBeenValidated", void 0);
 	__decorate([
 	    mobx_1.observable
 	], FieldState.prototype, "lastValidationRequest", void 0);
