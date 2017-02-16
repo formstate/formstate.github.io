@@ -36080,6 +36080,12 @@
 	    function FieldState(config) {
 	        var _this = this;
 	        this.config = config;
+	        /**
+	         * Set to true if a validation run has been completed since init
+	         * Use case:
+	         * - to show a green color in the field if `hasError` is false
+	         **/
+	        this.hasBeenValidated = false;
 	        this.autoValidationEnabled = true;
 	        this.enableAutoValidation = function () {
 	            _this.autoValidationEnabled = true;
@@ -36101,7 +36107,6 @@
 	            return _this;
 	        };
 	        /** Trackers for validation */
-	        this.hasBeenValidated = false;
 	        this.lastValidationRequest = 0;
 	        this.preventNextQueuedValidation = false;
 	        /** On change on the component side */
@@ -36157,6 +36162,7 @@
 	                    }
 	                }
 	                _this.validating = false;
+	                _this.hasBeenValidated = true;
 	                /** For any change in field error, update our error */
 	                if (fieldError != _this.error) {
 	                    _this.error = fieldError;
@@ -36182,10 +36188,6 @@
 	                        value: value
 	                    };
 	                }
-	            }))
-	                .then(mobx_1.action(function (status) {
-	                _this.hasBeenValidated = true;
-	                return status;
 	            }));
 	        };
 	        this.queuedValidationWakeup = function () {
@@ -36242,6 +36244,9 @@
 	], FieldState.prototype, "$", void 0);
 	__decorate([
 	    mobx_1.observable
+	], FieldState.prototype, "hasBeenValidated", void 0);
+	__decorate([
+	    mobx_1.observable
 	], FieldState.prototype, "autoValidationEnabled", void 0);
 	__decorate([
 	    mobx_1.action
@@ -36255,9 +36260,6 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "validators", void 0);
-	__decorate([
-	    mobx_1.observable
-	], FieldState.prototype, "hasBeenValidated", void 0);
 	__decorate([
 	    mobx_1.observable
 	], FieldState.prototype, "lastValidationRequest", void 0);
