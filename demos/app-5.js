@@ -89,14 +89,8 @@
 	/** FieldState */
 	var index_1 = __webpack_require__(363);
 	var formState = new index_1.FormState({
-	    foo: new index_1.FieldState({
-	        value: '',
-	        autoValidationEnabled: false,
-	    }).validators(function (val) { return val !== 'foo' && "I only allow 'foo'"; }),
-	    bar: new index_1.FieldState({
-	        value: '',
-	        autoValidationEnabled: false,
-	    }).validators(function (val) { return val !== 'bar' && "I only allow 'bar'"; })
+	    foo: new index_1.FieldState('').disableAutoValidation().validators(function (val) { return val !== 'foo' && "I only allow 'foo'"; }),
+	    bar: new index_1.FieldState('').disableAutoValidation().validators(function (val) { return val !== 'bar' && "I only allow 'bar'"; })
 	});
 	mui_1.render(function () { return React.createElement("form", { onSubmit: function (e) { return __awaiter(_this, void 0, void 0, function () {
 	        var res;
@@ -36087,25 +36081,26 @@
 	 * This is the glue between the *page* and *field* in the presence of invalid states.
 	 */
 	var FieldState = (function () {
-	    function FieldState(config) {
+	    function FieldState(value) {
 	        var _this = this;
-	        this.config = config;
 	        /**
 	         * Set to true if a validation run has been completed since init
 	         * Use case:
 	         * - to show a green color in the field if `hasError` is false
 	         **/
 	        this.hasBeenValidated = false;
-	        this.autoValidationEnabled = true;
+	        this._autoValidationEnabled = true;
 	        this.enableAutoValidation = function () {
-	            _this.autoValidationEnabled = true;
+	            _this._autoValidationEnabled = true;
+	            return _this;
 	        };
 	        this.enableAutoValidationAndValidate = function () {
-	            _this.autoValidationEnabled = true;
+	            _this._autoValidationEnabled = true;
 	            return _this.validate();
 	        };
 	        this.disableAutoValidation = function () {
-	            _this.autoValidationEnabled = false;
+	            _this._autoValidationEnabled = false;
+	            return _this;
 	        };
 	        this._validators = [];
 	        this.validators = function () {
@@ -36114,6 +36109,14 @@
 	                validators[_i] = arguments[_i];
 	            }
 	            _this._validators = validators;
+	            return _this;
+	        };
+	        this.onUpdate = function (handler) {
+	            _this._onUpdate = handler;
+	            return _this;
+	        };
+	        this.setAutoValidationDebouncedMs = function (milliseconds) {
+	            _this.queueValidation = mobx_1.action(utils_1.debounce(_this.queuedValidationWakeup, milliseconds));
 	            return _this;
 	        };
 	        /** Trackers for validation */
@@ -36125,8 +36128,8 @@
 	            _this.preventNextQueuedValidation = false;
 	            // Immediately set for local ui binding
 	            _this.value = value;
-	            _this.onUpdate();
-	            if (_this.autoValidationEnabled) {
+	            _this.executeOnUpdate();
+	            if (_this._autoValidationEnabled) {
 	                _this.queueValidation();
 	            }
 	        };
@@ -36143,7 +36146,7 @@
 	            _this.hasBeenValidated = false;
 	            _this.$ = value;
 	            _this.on$Reinit();
-	            _this.onUpdate();
+	            _this.executeOnUpdate();
 	        };
 	        this.validating = false;
 	        /**
@@ -36187,7 +36190,7 @@
 	                    }
 	                }
 	                /** before returning update */
-	                _this.onUpdate();
+	                _this.executeOnUpdate();
 	                /** return a result based on error status */
 	                if (hasError) {
 	                    return { hasError: hasError };
@@ -36212,8 +36215,8 @@
 	         * NOTE: also setup in constructor
 	         */
 	        this.queueValidation = mobx_1.action(utils_1.debounce(this.queuedValidationWakeup, 200));
-	        this.onUpdate = function () {
-	            _this.config.onUpdate && _this.config.onUpdate(_this);
+	        this.executeOnUpdate = function () {
+	            _this._onUpdate && _this._onUpdate(_this);
 	        };
 	        /**
 	         * Composible fields (fields that work in conjuction with FormState)
@@ -36225,13 +36228,13 @@
 	            _this.on$Reinit = config.on$Reinit;
 	        };
 	        mobx_1.runInAction(function () {
-	            _this.value = config.value;
-	            _this.$ = config.value;
+	            _this.value = value;
+	            _this.$ = value;
 	            /**
 	             * Automatic validation configuration
 	             */
-	            _this.queueValidation = mobx_1.action(utils_1.debounce(_this.queuedValidationWakeup, config.autoValidationDebounceMs || 200));
-	            _this.autoValidationEnabled = config.autoValidationEnabled == undefined ? true : config.autoValidationEnabled;
+	            _this.queueValidation = mobx_1.action(utils_1.debounce(_this.queuedValidationWakeup, 200));
+	            _this._autoValidationEnabled = true;
 	        });
 	    }
 	    Object.defineProperty(FieldState.prototype, "hasError", {
@@ -36257,7 +36260,7 @@
 	], FieldState.prototype, "hasBeenValidated", void 0);
 	__decorate([
 	    mobx_1.observable
-	], FieldState.prototype, "autoValidationEnabled", void 0);
+	], FieldState.prototype, "_autoValidationEnabled", void 0);
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "enableAutoValidation", void 0);
@@ -36270,6 +36273,12 @@
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "validators", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "onUpdate", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "setAutoValidationDebouncedMs", void 0);
 	__decorate([
 	    mobx_1.observable
 	], FieldState.prototype, "lastValidationRequest", void 0);
@@ -36293,7 +36302,7 @@
 	], FieldState.prototype, "queuedValidationWakeup", void 0);
 	__decorate([
 	    mobx_1.action
-	], FieldState.prototype, "onUpdate", void 0);
+	], FieldState.prototype, "executeOnUpdate", void 0);
 	__decorate([
 	    mobx_1.action
 	], FieldState.prototype, "on$ChangeAfterValidation", void 0);
