@@ -36029,7 +36029,17 @@
 	         * - to show a green color in the field if `hasError` is false
 	         **/
 	        this.hasBeenValidated = false;
-	        this._autoValidationEnabled = true;
+	        /**
+	         * Allows you to preserve the `_autoValidationEnabled` value across `reinit`s
+	         */
+	        this._autoValidationDefault = true;
+	        this.setAutoValidationDefault = function (autoValidationDefault) {
+	            _this._autoValidationDefault = autoValidationDefault;
+	            _this._autoValidationEnabled = autoValidationDefault;
+	            return _this;
+	        };
+	        this.getAutoValidationDefault = function () { return _this._autoValidationDefault; };
+	        this._autoValidationEnabled = this._autoValidationDefault;
 	        this.enableAutoValidation = function () {
 	            _this._autoValidationEnabled = true;
 	            return _this;
@@ -36081,6 +36091,7 @@
 	            // If a previous validation comes back ignore it
 	            _this.preventNextQueuedValidation = true;
 	            // This value vetos all previous values
+	            _this._autoValidationEnabled = _this._autoValidationDefault;
 	            _this.value = value;
 	            _this.error = undefined;
 	            _this.hasBeenValidated = false;
@@ -36198,6 +36209,15 @@
 	__decorate([
 	    mobx_1.observable
 	], FieldState.prototype, "hasBeenValidated", void 0);
+	__decorate([
+	    mobx_1.observable
+	], FieldState.prototype, "_autoValidationDefault", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "setAutoValidationDefault", void 0);
+	__decorate([
+	    mobx_1.action
+	], FieldState.prototype, "getAutoValidationDefault", void 0);
 	__decorate([
 	    mobx_1.observable
 	], FieldState.prototype, "_autoValidationEnabled", void 0);
