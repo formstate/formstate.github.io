@@ -22615,8 +22615,6 @@
 	
 		var _mobx = __webpack_require__(2);
 	
-		var _mobx2 = _interopRequireDefault(_mobx);
-	
 		var _react = __webpack_require__(3);
 	
 		var _react2 = _interopRequireDefault(_react);
@@ -22649,7 +22647,16 @@
 		var renderReporter = exports.renderReporter = new _EventEmitter2.default();
 	
 		function findDOMNode(component) {
-		  if (_reactDom2.default) return _reactDom2.default.findDOMNode(component);
+		  if (_reactDom2.default) {
+		    try {
+		      return _reactDom2.default.findDOMNode(component);
+		    } catch (e) {
+		      // findDOMNode will throw in react-test-renderer, see:
+		      // See https://github.com/mobxjs/mobx-react/issues/216
+		      // Is there a better heuristic?
+		      return null;
+		    }
+		  }
 		  return null;
 		}
 	
@@ -22739,7 +22746,7 @@
 	
 		    function makePropertyObservableReference(propName) {
 		      var valueHolder = this[propName];
-		      var atom = new _mobx2.default.Atom("reactive " + propName);
+		      var atom = new _mobx.Atom("reactive " + propName);
 		      Object.defineProperty(this, propName, {
 		        configurable: true, enumerable: true,
 		        get: function get() {
@@ -22770,7 +22777,7 @@
 		    var isRenderingPending = false;
 	
 		    var initialRender = function initialRender() {
-		      reaction = new _mobx2.default.Reaction(initialName + '#' + rootNodeID + '.render()', function () {
+		      reaction = new _mobx.Reaction(initialName + '#' + rootNodeID + '.render()', function () {
 		        if (!isRenderingPending) {
 		          // N.B. Getting here *before mounting* means that a component constructor has side effects (see the relevant test in misc.js)
 		          // This unidiomatic React usage but React will correctly warn about this so we continue as usual
@@ -22800,16 +22807,22 @@
 	
 		    var reactiveRender = function reactiveRender() {
 		      isRenderingPending = false;
+		      var exception = undefined;
 		      var rendering = undefined;
 		      reaction.track(function () {
 		        if (isDevtoolsEnabled) {
 		          _this.__$mobRenderStart = Date.now();
 		        }
-		        rendering = _mobx2.default.extras.allowStateChanges(false, baseRender);
+		        try {
+		          rendering = _mobx.extras.allowStateChanges(false, baseRender);
+		        } catch (e) {
+		          exception = e;
+		        }
 		        if (isDevtoolsEnabled) {
 		          _this.__$mobRenderEnd = Date.now();
 		        }
 		      });
+		      if (exception) throw exception;
 		      return rendering;
 		    };
 	
@@ -23444,11 +23457,17 @@
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {"use strict";
-	var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
 	registerGlobals();
 	exports.extras = {
 	    allowStateChanges: allowStateChanges,
@@ -23472,6 +23491,7 @@
 	if (typeof __MOBX_DEVTOOLS_GLOBAL_HOOK__ === "object") {
 	    __MOBX_DEVTOOLS_GLOBAL_HOOK__.injectMobx(module.exports);
 	}
+	module.exports.default = module.exports;
 	var actionFieldDecorator = createClassPropertyDecorator(function (target, key, value, args, originalDescriptor) {
 	    var actionName = (args && args.length === 1) ? args[0] : (value.name || key || "<unnamed action>");
 	    var wrappedAction = action(actionName, value);
@@ -23650,7 +23670,7 @@
 	    var isScheduled = false;
 	    var nextValue;
 	    var r = new Reaction(opts.name, function () {
-	        if (opts.delay < 1) {
+	        if (firstTime || opts.delay < 1) {
 	            reactionRunner();
 	        }
 	        else if (!isScheduled) {
@@ -24972,7 +24992,7 @@
 	    if (isPlainObject(v))
 	        return observable.object(v, name);
 	    if (isES6Map(v))
-	        return observable.shallowMap(v, name);
+	        return observable.map(v, name);
 	    return v;
 	}
 	function shallowEnhancer(v, _, name) {
@@ -25015,6 +25035,7 @@
 	        return oldValue;
 	    return v;
 	}
+	var MAX_SPLICE_SIZE = 10000;
 	var safariPrototypeSetterInheritanceBug = (function () {
 	    var v = false;
 	    var p = {};
@@ -25067,8 +25088,12 @@
 	        var currentLength = this.values.length;
 	        if (newLength === currentLength)
 	            return;
-	        else if (newLength > currentLength)
-	            this.spliceWithArray(currentLength, 0, new Array(newLength - currentLength));
+	        else if (newLength > currentLength) {
+	            var newItems = new Array(newLength - currentLength);
+	            for (var i = 0; i < newLength - currentLength; i++)
+	                newItems[i] = undefined;
+	            this.spliceWithArray(currentLength, 0, newItems);
+	        }
 	        else
 	            this.spliceWithArray(newLength, currentLength - newLength);
 	    };
@@ -25113,10 +25138,20 @@
 	        newItems = newItems.map(function (v) { return _this.enhancer(v, undefined); });
 	        var lengthDelta = newItems.length - deleteCount;
 	        this.updateArrayLength(length, lengthDelta);
-	        var res = (_a = this.values).splice.apply(_a, [index, deleteCount].concat(newItems));
+	        var res = this.spliceItemsIntoValues(index, deleteCount, newItems);
 	        if (deleteCount !== 0 || newItems.length !== 0)
 	            this.notifyArraySplice(index, newItems, res);
 	        return res;
+	    };
+	    ObservableArrayAdministration.prototype.spliceItemsIntoValues = function (index, deleteCount, newItems) {
+	        if (newItems.length < MAX_SPLICE_SIZE) {
+	            return (_a = this.values).splice.apply(_a, [index, deleteCount].concat(newItems));
+	        }
+	        else {
+	            var res = this.values.slice(index, index + deleteCount);
+	            this.values = this.values.slice(0, index).concat(newItems, this.values.slice(index + deleteCount));
+	            return res;
+	        }
 	        var _a;
 	    };
 	    ObservableArrayAdministration.prototype.notifyArrayChildUpdate = function (index, newValue, oldValue) {
@@ -25230,6 +25265,9 @@
 	        }
 	        return this.$mobx.spliceWithArray(index, deleteCount, newItems);
 	    };
+	    ObservableArray.prototype.spliceWithArray = function (index, deleteCount, newItems) {
+	        return this.$mobx.spliceWithArray(index, deleteCount, newItems);
+	    };
 	    ObservableArray.prototype.push = function () {
 	        var items = [];
 	        for (var _i = 0; _i < arguments.length; _i++) {
@@ -25322,6 +25360,7 @@
 	    "peek",
 	    "find",
 	    "splice",
+	    "spliceWithArray",
 	    "push",
 	    "pop",
 	    "shift",
@@ -25772,10 +25811,7 @@
 	var observablePropertyConfigs = {};
 	var computedPropertyConfigs = {};
 	function generateObservablePropConfig(propName) {
-	    var config = observablePropertyConfigs[propName];
-	    if (config)
-	        return config;
-	    return observablePropertyConfigs[propName] = {
+	    return observablePropertyConfigs[propName] || (observablePropertyConfigs[propName] = {
 	        configurable: true,
 	        enumerable: true,
 	        get: function () {
@@ -25784,13 +25820,10 @@
 	        set: function (v) {
 	            setPropertyValue(this, propName, v);
 	        }
-	    };
+	    });
 	}
 	function generateComputedPropConfig(propName) {
-	    var config = computedPropertyConfigs[propName];
-	    if (config)
-	        return config;
-	    return computedPropertyConfigs[propName] = {
+	    return computedPropertyConfigs[propName] || (computedPropertyConfigs[propName] = {
 	        configurable: true,
 	        enumerable: false,
 	        get: function () {
@@ -25799,7 +25832,7 @@
 	        set: function (v) {
 	            return this.$mobx.values[propName].set(v);
 	        }
-	    };
+	    });
 	}
 	function setPropertyValue(instance, name, newValue) {
 	    var adm = instance.$mobx;
@@ -25944,6 +25977,7 @@
 	}(BaseAtom));
 	ObservableValue.prototype[primitiveSymbol()] = ObservableValue.prototype.valueOf;
 	var isObservableValue = createInstanceofPredicate("ObservableValue", ObservableValue);
+	exports.isBoxedObservable = isObservableValue;
 	function getAtom(thing, property) {
 	    if (typeof thing === "object" && thing !== null) {
 	        if (isObservableArray(thing)) {
@@ -26002,6 +26036,7 @@
 	}
 	function createClassPropertyDecorator(onInitialize, get, set, enumerable, allowCustomArguments) {
 	    function classPropertyDecorator(target, key, descriptor, customArgs, argLen) {
+	        if (argLen === void 0) { argLen = 0; }
 	        invariant(allowCustomArguments || quacksLikeADecorator(arguments), "This function is a decorator, but it wasn't invoked like a decorator");
 	        if (!descriptor) {
 	            var newDescriptor = {
@@ -35482,7 +35517,7 @@
 	  /**
 	   * The DOM target to listen to.
 	   */
-	  target: _react.PropTypes.oneOfType([_react.PropTypes.object, _react.PropTypes.string])
+	  target: _react.PropTypes.oneOfType([_react.PropTypes.object, _react.PropTypes.string]).isRequired
 	} : void 0;
 	exports.default = EventListener;
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
@@ -36161,9 +36196,11 @@
 	        };
 	        /**
 	         * Runs validation with debouncing to keep the UI super smoothly responsive
-	         * NOTE: also setup in constructor
+	         * NOTE:
+	         * - also setup in constructor
+	         * - Not using `action` from mobx *here* as it throws off our type definitions
 	         */
-	        this.queueValidation = mobx_1.action(utils_1.debounce(this.queuedValidationWakeup, 200));
+	        this.queueValidation = utils_1.debounce(this.queuedValidationWakeup, 200);
 	        this.executeOnUpdate = function () {
 	            _this._onUpdate && _this._onUpdate(_this);
 	        };
