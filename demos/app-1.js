@@ -35343,6 +35343,10 @@
 	
 	var _keys2 = _interopRequireDefault(_keys);
 	
+	var _objectWithoutProperties2 = __webpack_require__(350);
+	
+	var _objectWithoutProperties3 = _interopRequireDefault(_objectWithoutProperties2);
+	
 	var _assign = __webpack_require__(346);
 	
 	var _assign2 = _interopRequireDefault(_assign);
@@ -35409,12 +35413,17 @@
 	var state = {};
 	
 	function forEachListener(props, iteratee) {
-	  (0, _keys2.default)(props).forEach(function (name) {
+	  var children = props.children,
+	      target = props.target,
+	      eventProps = (0, _objectWithoutProperties3.default)(props, ['children', 'target']);
+	
+	
+	  (0, _keys2.default)(eventProps).forEach(function (name) {
 	    if (name.substring(0, 2) !== 'on') {
 	      return;
 	    }
 	
-	    var prop = props[name];
+	    var prop = eventProps[name];
 	    var type = typeof prop === 'undefined' ? 'undefined' : (0, _typeof3.default)(prop);
 	    var isObject = type === 'object';
 	    var isFunction = type === 'function';
