@@ -36980,8 +36980,9 @@
 	 * This is the glue between the *page* and *field* in the presence of invalid states.
 	 */
 	var FieldState = (function () {
-	    function FieldState(value) {
+	    function FieldState(_initValue) {
 	        var _this = this;
+	        this._initValue = _initValue;
 	        /**
 	         * Set to true if a validation run has been completed since init
 	         * Use case:
@@ -37047,6 +37048,7 @@
 	         * it should call this function
 	         */
 	        this.reinitValue = function (value) {
+	            if (value === void 0) { value = _this._initValue; }
 	            // If a previous validation comes back ignore it
 	            _this.preventNextQueuedValidation = true;
 	            // This value vetos all previous values
@@ -37140,8 +37142,8 @@
 	            _this.on$Reinit = config.on$Reinit;
 	        };
 	        mobx_1.runInAction(function () {
-	            _this.value = value;
-	            _this.$ = value;
+	            _this.value = _initValue;
+	            _this.$ = _initValue;
 	            /**
 	             * Automatic validation configuration
 	             */
