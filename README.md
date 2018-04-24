@@ -12,7 +12,7 @@ Note that the API is quite simple and consists of `Validator`, `FieldState` and 
 
 ## Demos
 
-If you want to see it in action [we have lots of demos here 📝](https://formstate.github.io/demos)
+If you want to see it in action [we have lots of demos here 📝][demos]
 
 ### Quick Example
 
@@ -145,8 +145,10 @@ The FieldState takes an optional list of validators so you would use it as simpl
 
 ```ts
 const required = (val:string) => !val && 'Value required';
-const name = new FieldState('').validators(required);
+const only3letters  = (val:string) => !val && val.length !== 3  && 'only 3 letters';
+const name = new FieldState('').validators(required, only3letters);
 ```
+> We also cover serial and parallel validation in the TIPs section below.
 
 ### Demo: Field
 You create a `Field` component based on your design. But its actually not hard, essentially your `Field` components looks like the following:
@@ -344,18 +346,44 @@ validators((value)=>{
 
 ### TIP: Empty values
 
-We could isolate the validators from handling such cases by not calling a validator if the empty is value, but its a decision we don't want to make for *your validation requirements*. You can easily wrap your validator in a function that removes `TValue`s that you don't want to handle e.g
+When the field is empty, the only validator that should consider it *invalid* should be the *required* validator. Most other validators should consider it as *valid*.
+
+Example: Here is a *required* and *email* validator:
 
 ```ts
-function ifValue(validator:Validator<TValue>):Validator<TValue>{
+export const required: Validator<string | null | undefined> = (value) => {
+  const error = "Value Required";
+  if (value == null || !value.trim()) {
+    return error;
+  }
+  return null;
+}
+export const email: Validator<string | null | undefined> = (value) => {
+  // Empty values are not invalid emails
+  if (required(email)) return null;
+  value = value.trim();
+  // Src : http://emailregex.com/
+  if (!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/g.exec(value)) {
+    return "Not a valid email address";
+  }
+  return null;
+}
+```
+
+This way if you just use `validators(email)` you do not get an error for empty values and only get an error on invalid emails when they are provided. If you use `validators(required,email)` you get an error for empty values plus invalid emails.
+
+You can easily wrap your validator in a function that removes `TValue`s that you don't want to handle e.g
+
+```ts
+function ifValue(validator:Validator<TValue>):Validator<TValue | null | undefined>{
   return function(value: TValue) {
-    if (!value || value == null) return '';
+    if (!value || value == null) return null;
     return validator(value);
   };
 }
 
 // Usage
-// validators(ifValue(mySimplerValidator))
+// validators: [ifValue(mySimplerValidator)]
 ```
 
 ### TIP: Customisable validators
@@ -370,6 +398,20 @@ validators(minValue(1,"The minimum bid is set at $1"));
 validators(minValue(13,"Sorry, you must be 13 or older to use this website"));
 ```
 
+### TIP: Inheritance
+
+Feel free to inherit `FieldState` and change its behaviour to customize it for your *common* pattern. e.g. for a different default validation trigger:
+
+```ts
+export class MyAwesomeFieldState<TValue> extends FieldState<TValue> {
+  constructor(initValue: TValue){
+    super(initValue);
+    this.setAutoValidationDefault(false);
+  }
+}
+```
+> Note: validation triggers are covered in [demos][demos].
+
 ## Why
 
 We considered other options before creating our own. Here is our opinion:
@@ -379,3 +421,4 @@ We considered other options before creating our own. Here is our opinion:
 * Simpler Semantics: Its just functions and classes that can be written in isolation, tested in isolation, reviewed in isolation. Creating new validators is super simple. Server side validation is just as easy is simple client validations. So is creating new Fields and Forms (again strongly typed!).
 
 [mobx]:https://github.com/mobxjs/mobx
+[demos]:https://formstate.github.io/demos
