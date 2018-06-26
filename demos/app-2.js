@@ -38053,6 +38053,16 @@
 	            _this._autoValidationEnabled = true;
 	        });
 	    }
+	    /**
+	     * Allows you to set an error on a field lazily
+	     * Use case:
+	     *  You validate some things on client (e.g. isRequired)
+	     *  You then validate the field on the backend with an explict action (e.g. continue button)
+	     *  You now want to highlight an error from the backend for this field
+	     **/
+	    FieldState.prototype.setError = function (error) {
+	        this.error = error;
+	    };
 	    Object.defineProperty(FieldState.prototype, "hasError", {
 	        get: function () {
 	            return !!this.error;
@@ -38066,6 +38076,9 @@
 	    __decorate([
 	        mobx_1.observable
 	    ], FieldState.prototype, "error", void 0);
+	    __decorate([
+	        mobx_1.action
+	    ], FieldState.prototype, "setError", null);
 	    __decorate([
 	        mobx_1.observable
 	    ], FieldState.prototype, "dirty", void 0);
