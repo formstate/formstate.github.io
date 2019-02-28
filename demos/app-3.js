@@ -38501,10 +38501,11 @@
 
 /***/ },
 /* 371 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
+	var mobx_1 = __webpack_require__(186);
 	/**
 	 * Debounce
 	 */
@@ -38543,6 +38544,16 @@
 	}
 	exports.debounce = debounce;
 	;
+	function isES6Map(thing) {
+	    if (typeof Map !== 'undefined' && thing instanceof Map)
+	        return true;
+	    return false;
+	}
+	exports.isES6Map = isES6Map;
+	function isMapLike(thing) {
+	    return isES6Map(thing) || mobx_1.isObservableMap(thing);
+	}
+	exports.isMapLike = isMapLike;
 
 
 /***/ },
@@ -38593,6 +38604,7 @@
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var mobx_1 = __webpack_require__(186);
+	var utils_1 = __webpack_require__(371);
 	var types_1 = __webpack_require__(369);
 	/**
 	 * Just a wrapper around the helpers for a set of FieldStates or FormStates
@@ -38610,6 +38622,8 @@
 	        this.getValues = function () {
 	            if (_this.mode === 'array')
 	                return _this.$;
+	            if (_this.mode === 'es6map')
+	                return Array.from(_this.$.values());
 	            var keys = Object.keys(_this.$);
 	            return keys.map(function (key) { return _this.$[key]; });
 	        };
@@ -38655,7 +38669,7 @@
 	            _this.on$ChangeAfterValidation = function () { return mobx_1.runInAction(config.on$ChangeAfterValidation); };
 	            _this.on$Reinit = function () { return mobx_1.runInAction(config.on$Reinit); };
 	        };
-	        this.mode = mobx_1.isArrayLike($) ? 'array' : 'map';
+	        this.mode = mobx_1.isArrayLike($) ? 'array' : utils_1.isMapLike($) ? 'es6map' : 'map';
 	        /** If they didn't send in something observable make the local $ observable */
 	        if (!mobx_1.isObservable(this.$)) {
 	            this.$ = mobx_1.observable(this.$);
