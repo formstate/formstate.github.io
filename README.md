@@ -65,7 +65,7 @@ export class Demo extends React.Component<{},{}> {
         <p>{data.username.error}</p>
         <p>{data.form.error}</p>
       </form>
-    ));
+    );
   }
 }
 ```
